@@ -122,47 +122,30 @@ def create_app(test_config=None):
   of the questions list in the "List" tab.
   '''
 ###-------
-  @app.route('/questions/add', methods=['POST'])
-  def add_question():
-    data = {
-      'question': request.get_json()['question'],
-      'answer': request.get_json()['answer'],
-      'category': request.get_json()['category'],
-      'difficulty': request.get_json()['difficulty']
-    }
+  @app.route('/questions', methods=['POST'])
+  def create_question():
+    body = request.get_json()
 
-    question = Question(**data)
-    question.insert()
+    new_question = body.get('question')
+    new_answer = body.get('answer')
+    new_category = body.get('category')
+    new_difficulty = body.get('difficulty')
 
-    result = {
-      'success': True,
-    }
-    return jsonify(result)
-###-------
-  #@app.route('/questions', methods=['POST'])
-  #def create_question():
-#    body = request.get_json()
-#
-#    new_question = body.get('question')
-#    new_answer = body.get('answer')
-#    new_category = body.get('category')
-#    new_difficulty = body.get('difficulty')
-#
-#    try:
-#      question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
-#      question.insert()
-#
-#      selection = Question(question).query.ordr_by('id').all()
-#      current_questions = paginate_questions(request, selection)
-#
-#      return jsonify({
-#        'success': True,
-#        'created': question_id,
-#        'questions': current_questions,
-#        'total_questions': len(selection)
-#      })
-#    except:
-#      abort(422)
+    try:
+      question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+      question.insert()
+
+      selection = Question(question).query.ordr_by('id').all()
+      current_questions = paginate_questions(request, selection)
+
+      return jsonify({
+        'success': True,
+        'created': question_id,
+        'questions': current_questions,
+        'total_questions': len(selection)
+      })
+    except:
+      abort(422)
 ###-------
   '''
   @TODO:
