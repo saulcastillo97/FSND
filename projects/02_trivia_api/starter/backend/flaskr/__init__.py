@@ -10,10 +10,9 @@ QUESTIONS_PER_PAGE = 10
 ###-------
 def paginate_questions(request, selection):
   page = request.args.get('page', 1, type=int)
-  start = (page-1)*QUESTIONS_PER_PAGE
-  end = start+QUESTIONS_PER_PAGES
-
-  questions = [queestion.format() for question in selection]
+  start = (page-1) * QUESTIONS_PER_PAGE
+  end = start + QUESTIONS_PER_PAGES
+  questions = [question.format() for question in selection]
   curent_questions = questions[start:end]
 
   return current_questions
@@ -23,7 +22,7 @@ def create_app(test_config=None):
   # create and configure the app
   app = Flask(__name__)
   setup_db(app)
-  CORS(app)
+
 
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
@@ -37,8 +36,8 @@ def create_app(test_config=None):
 
   @app.after_request
   def after_request(response):
-    response.headers.add('Access-Control-Allow-Headers','Content_Type, Authorization, true')
-    response.headers.add('Access-Control-Allow-Methods','GET, PATCH, POST, DELETE, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers','Content-Type, Authorization, true')
+    response.headers.add('Access-Control-Allow-Methods','GET, PATCH, PUT, POST, DELETE, OPTIONS')
     return response
 
   '''
@@ -123,30 +122,47 @@ def create_app(test_config=None):
   of the questions list in the "List" tab.
   '''
 ###-------
-  @app.route('/questions', methods=['POST'])
-  def create_question():
-    body = request.get_json()
+  @app.route('/questions/add', methods=['POST'])
+  def add_question():
+    data = {
+      'question': request.get_json()['question'],
+      'answer': request.get_json()['answer'],
+      'category': request.get_json()['category'],
+      'difficulty': request.get_json()['difficulty']
+    }
 
-    new_question = body.get('question', None)
-    new_answer = body.get('answer', None)
-    new_category = body.get('category', None)
-    new_difficulty = body.get('difficulty', None)
+    question = Question(**data)
+    question.insert()
 
-    try:
-      question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
-      question.insert()
-
-      selection = Question(question).query.ordr_by('id').all()
-      current_questions = paginate_questions(request, selection)
-
-      return jsonify({
-        'success': True,
-        'created': question_id,
-        'questions': current_questions,
-        'total_questions': len(selection)
-      })
-    except:
-      abort(422)
+    result = {
+      'success': True,
+    }
+    return jsonify(result)
+###-------
+  #@app.route('/questions', methods=['POST'])
+  #def create_question():
+#    body = request.get_json()
+#
+#    new_question = body.get('question')
+#    new_answer = body.get('answer')
+#    new_category = body.get('category')
+#    new_difficulty = body.get('difficulty')
+#
+#    try:
+#      question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+#      question.insert()
+#
+#      selection = Question(question).query.ordr_by('id').all()
+#      current_questions = paginate_questions(request, selection)
+#
+#      return jsonify({
+#        'success': True,
+#        'created': question_id,
+#        'questions': current_questions,
+#        'total_questions': len(selection)
+#      })
+#    except:
+#      abort(422)
 ###-------
   '''
   @TODO:
@@ -172,7 +188,8 @@ def create_app(test_config=None):
       return jsonify({
         'success': True,
         'questions': paginate_questions(result, results),
-        'total_questions': len(results)
+        'total_questions': len(results),
+        'current_category': None
       })
     except:
       abort(422)
@@ -186,7 +203,7 @@ def create_app(test_config=None):
   category to be shown.
   '''
 ###-------
-  @app.route('/categories/<int:category_id>/questions')
+  @app.route('/categories/<int:category_id>/questions', methods=['GET'])
   def question_by_category(category_id):
     questions = Question.query.filter(Question.category == category_id).all()
 
