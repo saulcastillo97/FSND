@@ -11,9 +11,9 @@ QUESTIONS_PER_PAGE = 10
 def paginate_questions(request, selection):
   page = request.args.get('page', 1, type=int)
   start = (page-1) * QUESTIONS_PER_PAGE
-  end = start + QUESTIONS_PER_PAGES
+  end = start + QUESTIONS_PER_PAGE
   questions = [question.format() for question in selection]
-  curent_questions = questions[start:end]
+  current_questions = questions[start:end]
 
   return current_questions
 
@@ -79,7 +79,7 @@ def create_app(test_config=None):
     current_questions = paginate_questions(request, questions_list)
     categories = Category.query.order_by(Category.type).all()
 
-    if len(paginated_questions) == 0:
+    if len(current_questions) == 0:
       abort(404)
 
       return jsonify({
@@ -106,7 +106,7 @@ def create_app(test_config=None):
       return jsonify({
         'success': True,
         'deleted': question.id,
-        'message': 'Successfully delted'
+        'message': 'Successfully deleted'
       }), 200
     except:
       abort(404)
@@ -135,7 +135,7 @@ def create_app(test_config=None):
       question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
       question.insert()
 
-      selection = Question(question).query.ordr_by('id').all()
+      selection = Question(question).query.order_by('id').all()
       current_questions = paginate_questions(request, selection)
 
       return jsonify({
@@ -158,7 +158,7 @@ def create_app(test_config=None):
   Try using the word "title" to start.
   '''
 ###-------
-  @app.route('/questions/search', methods=['POST'])
+  @app.route('/questions', methods=['POST'])
   def search_question():
     try:
       body = request.get_json()
@@ -246,7 +246,7 @@ def create_app(test_config=None):
         'question': question
       })
     except:
-      abort(500, "An error occured whilee tryin to load thee next question")
+      abort(500, "An error occurred while trying to load the next question")
 ###--------
   #'''
   #@TODO:
