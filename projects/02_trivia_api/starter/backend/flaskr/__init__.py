@@ -107,7 +107,7 @@ def create_app(test_config=None):
         'success': True,
         'deleted': question.id,
         'message': 'Successfully deleted'
-      }), 200
+      })#, 200
     except:
       abort(404)
 ###-------
@@ -168,7 +168,7 @@ def create_app(test_config=None):
     try:
       body = request.get_json()
       search = body.get('searchTerm', None)
-      results = Question.query.filter(Question.question.ilike('%{}%'.format(search_term))).all()
+      results = Question.query.filter(Question.question.ilike('%{}%'.format(search))).all()
       #Question.query.filter(Question.question.ilike(f'%{search}%')).all()
       formatted_questions = [question.format() for question in results]
 
