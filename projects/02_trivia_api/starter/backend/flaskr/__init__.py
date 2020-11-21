@@ -123,7 +123,6 @@ def create_app(test_config=None):
   '''
 ###-------
   @app.route('/questions/add', methods=['POST'])
-  #@app.route('/questions', methods=['POST'])
   def create_question():
     body = request.get_json()
 
@@ -168,11 +167,13 @@ def create_app(test_config=None):
   def search_question():
     try:
       body = request.get_json()
-      search = body.get('searchTerm', '')
-      results = Question.query.filter(Question.question.ilike(f'%{search}%')).all()
-      formatted_questions = [question.format() for question in questions]#//
+      search = body.get('searchTerm', None)
+      results = Question.query.filter(Question.question.ilike('%{}%'.format(search_term))).all()
+      #Question.query.filter(Question.question.ilike(f'%{search}%')).all()
+      formatted_questions = [question.format() for question in results]
 
       if len(results) == 0:
+        #print (sys.exc_info())
         formatted_questions = []
         abort(400)
 
@@ -184,7 +185,7 @@ def create_app(test_config=None):
         'current_category': None
       })
     except:
-      abort(422)
+      abort(404)
 ###-------
   '''
   @TODO:
@@ -198,11 +199,11 @@ def create_app(test_config=None):
   @app.route('/categories/<int:category_id>/questions', methods=['GET'])
   def question_by_category(category_id):
     questions = Question.query.filter(Question.category == category_id).all()
-    formatted_questions = [question.format() for queestion in questions] #//
+    formatted_questions = [question.format() for question in questions] #//
     if len(questions) == 0:
       abort(404)
 
-    #selection = paginate_questions(request, questions)
+    selection = paginate_questions(request, questions)
 
     return jsonify({
       'success': True,
@@ -223,39 +224,36 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not.
   '''
-###-------
+
   @app.route('/quizzes', methods=['POST'])
   def play_randomized_quiz():
     try:
+###-------
       data = request.get_json()
+      print(data)
 
-      category_id = int(data["quiz_category"]["id"])
-      category = Category.query.get(category_id)
-      previous_questions = data["previous_questions"]
-      if not category == None:
-        if 'previous_questions' in data and len(previous_questions) > 0:
-          questions = Question.query.filter(
-            Question.id.notin_(previous_questions),
-            Question.category == category.id
-          ).all()
-        else:
-          questions = Questions.query.filter(Question.category == category.id).all()
+      quiz_category = data.get('quiz_category', None)
+      previous_questions = data.get('previous_questions', None)
+      print(previous_questions)
+
+      quiz_questions = Question.query.filter(
+        Question.id.notin_(previous_questions)).all()
+
+      if quiz_category['id'] == 0:
+        test_questions = Question.query.all()
       else:
-        if 'previous_questions' in data and len(previous_questions) > 0:
-          questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
-        else:
-          questions = Question.query.all()
-      max = len(questions) - 1
-      if max > 0:
-        question = questions[random.randint(0, max)].format()
-      else:
-        question = False
+        Question.query.filter(Question.id.notin_(previous_questions), Question.category == quiz_category['id']).all()
+
       return jsonify({
         'success': True,
-        'question': question
-      })
+        'question': random.choice(quiz_questions).format()
+       })
     except:
-      abort(500, "An error occurred while trying to load the next question")
+      abort(422)
+    #except Exception as e:
+      #print(e)
+      #print(422)
+
 ###--------
   #'''
   #@TODO:
