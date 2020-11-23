@@ -77,15 +77,16 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['categories'])
 
     def test_delete_question(self):
-        res = self.client().delete('/questions/1')
+        res = self.client().delete('/questions/11')
         data = json.loads(res.data)
 
-        question = Question.query.filter(Question.id == 1).one_or_none()
+        question = Question.query.filter(Question.id == 11).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 1)
-        self.assertTrue(data['total_questions'])
+        self.assertEqual(data['deleted'], 11)
+        #self.assertTrue(data['total_questions'])
+        self.assertEqual(data['message'], 'Successfully deleted')
         self.assertEqual(question, None)
 
     def test_post_new_question(self):
@@ -109,7 +110,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'Unprocessable')
 
     def test_search_question(self):
-        res = self.client().post('/questions', json = {'searchTerm': 'Jackie'})
+        res = self.client().post('/questions', json = {'searchTerm': 'who'})
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
