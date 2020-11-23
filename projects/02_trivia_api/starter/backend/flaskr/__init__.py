@@ -132,13 +132,16 @@ def create_app(test_config=None):
     new_category = body.get('category', None)
     new_difficulty = body.get('difficulty', None)
 
+    if new_question is None and new_answer is None and new_category is None and new_difficulty is None:
+      abort (422)
+
     try:
       question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
       question.insert()
 
-      #selection = Question.query.order_by('id').all()
+      selection = Question.query.order_by('id').all()
       #selection = Question(question).query.order_by('id').all()
-      #current_questions = paginate_questions(request, selection)
+      current_questions = paginate_questions(request, selection)
 
       return jsonify({
         'success': True,
