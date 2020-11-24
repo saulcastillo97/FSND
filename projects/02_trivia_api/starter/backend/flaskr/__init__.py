@@ -127,13 +127,14 @@ def create_app(test_config=None):
   def create_question():
     body = request.get_json()
 
+    if not ('question' in body and 'answer' in body and 'difficulty' in body and 'category' in body):
+    #if new_question is None and new_answer is None and new_category is None and new_difficulty is None:
+      abort (422)
+
     new_question = body.get('question', None)
     new_answer = body.get('answer', None)
     new_category = body.get('category', None)
     new_difficulty = body.get('difficulty', None)
-
-    if new_question is None and new_answer is None and new_category is None and new_difficulty is None:
-      abort (422)
 
     try:
       question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
@@ -156,16 +157,16 @@ def create_app(test_config=None):
     except:
       abort(422)
 ###-------
-  '''
-  @TODO:
-  Create a POST endpoint to get questions based on a search term.
-  It should return any questions for whom the search term
-  is a substring of the question.
+  #'''
+  #@TODO:
+  #Create a POST endpoint to get questions based on a search term.
+  #It should return any questions for whom the search term
+  #is a substring of the question.
 
-  TEST: Search by any phrase. The questions list will update to include
-  only question that include that string within their question.
-  Try using the word "title" to start.
-  '''
+  #TEST: Search by any phrase. The questions list will update to include
+  #only question that include that string within their question.
+  #Try using the word "title" to start.
+  #'''
 ###-------
   @app.route('/questions', methods=['POST'])
   def search_question():
