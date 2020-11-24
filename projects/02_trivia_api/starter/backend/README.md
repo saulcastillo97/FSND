@@ -265,7 +265,7 @@ GET /questions
   "total_questions": 16
 }
 '''
-########
+
 DELETE /questions/<int:question_id>'
 - General:
   - Deletes question using question_id
@@ -400,7 +400,11 @@ createdb trivia_test
 psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
+## Deployment (if applicable)
+N/a
 
-##Authors
+## Authors
+Saul Castillo
 
-##Acknowledgements
+## Acknowledgements
+My awesome course instructor Caryn and Udacity mentors.
