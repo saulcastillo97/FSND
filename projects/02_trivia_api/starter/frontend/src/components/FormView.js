@@ -35,24 +35,17 @@ class FormView extends Component {
   submitQuestion = (event) => {
     event.preventDefault();
     $.ajax({
-      url: 'http://localhost:3000/questions/add',
+      url: '/questions/add',
+      //url: 'http://localhost:3000/questions/add',
       //url: '/questions', //TODO: update request URL
       type: "POST",
       dataType: 'json',
       contentType: 'application/json',
       data: JSON.stringify({
-        question: 'question',
-        answer: 'answer',
-        difficulty: 'difficulty',
-        category: 'category'
-        //question: 'string',
-        //answer: 'string',
-        //difficulty: 'int',
-        //category: 'string'
-        //question: this.state.question,
-        //answer: this.state.answer,
-        //difficulty: this.state.difficulty,
-        //category: this.state.category
+        question: this.state.question,
+        answer: this.state.answer,
+        difficulty: this.state.difficulty,
+        category: this.state.category
       }),
       xhrFields: {
         withCredentials: true
