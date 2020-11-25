@@ -215,7 +215,6 @@ def create_app(test_config=None):
       'questions': selection,
       'total_questions': len(questions),
       'current_category': category_id
-      print(item)
     })
 ###-------
 
