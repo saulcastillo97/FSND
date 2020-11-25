@@ -203,7 +203,7 @@ def create_app(test_config=None):
 ###-------
   @app.route('/categories/<int:category_id>/questions', methods=['GET'])
   def question_by_category(category_id):
-    questions = Question.query.filter(Question.category == category_id).all()
+    questions = Question.query.filter(Question.category == str(category_id)).all()
     formatted_questions = [question.format() for question in questions] #//
     if len(questions) == 0:
       abort(404)
@@ -215,6 +215,7 @@ def create_app(test_config=None):
       'questions': selection,
       'total_questions': len(questions),
       'current_category': category_id
+      print(item)
     })
 ###-------
 
