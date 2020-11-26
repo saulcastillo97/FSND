@@ -247,7 +247,7 @@ def create_app(test_config=None):
       if quiz_category['id'] == 0:
         test_questions = Question.query.all()
       else:
-        Question.query.filter(Question.id.notin_(previous_questions), Question.category == quiz_category['id']).all()
+        quiz_questions = Question.query.filter(Question.id.notin_(previous_questions), Question.category == quiz_category['id']).all()
 
       return jsonify({
         'success': True,
