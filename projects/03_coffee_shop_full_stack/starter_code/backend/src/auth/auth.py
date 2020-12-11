@@ -33,31 +33,43 @@ class AuthError(Exception):
 #def get_token_auth_header():
 #   raise Exception('Not Implemented')
 def get_token_auth_header():
-    auth = request.headers.get('Authorization, None')
-    if not auth:
+    auth_header = request.headers.get('Authorization', None)
+    if not auth_header:
         raise AuthError({
-            'code':'authorization_header_missing',
-            'description':'Authorization header is missing'
+            'code': 'authorization_header_missing',
+            'description': 'Authorization header is missing'
         }, 401)
 
-    header_parts = auth.split()
+    header_parts = auth_header.split()
+
+    #if not len(header_parts) == 2:
+    #    raise AuthError({
+    #        'code': 'invalid_header',
+    #        'description': 'Authorization header must start with "Bearer"'
+    #    }, 401)
+#
+    #if header_parts[0].lower() != 'bearer':
+    #    raise AuthError({
+    #        'code': 'invalid_header',
+    #        'description': 'Authorization header must start with "Bearer"'
+    #    }, 401)
 
     if header_parts[0].lower() != "bearer":
         raise AuthError({
-            'code':'invalid_header',
-            'description':'Authorization header must start with "Bearer"'
+            'code': 'invalid_header',
+            'description': 'Authorization header must start with "Bearer"'
         }, 401)
 
     elif len (header_parts) == 1:
         raise AuthError({
             'code': 'invalid_header',
-            'description':'Token not located'
+            'description': 'Token not located'
         }, 401)
 
     elif len (header_parts) > 2:
         raise AuthError({
-            'code':'invalid_header',
-            'description':'Authorization header must be in bearer token'
+            'code': 'invalid_header',
+            'description': 'Authorization header must be in bearer token'
         }, 401)
 
     token = header_parts[1]
@@ -106,7 +118,7 @@ def check_permissions(permission, payload):
 #def verify_decode_jwt(token):
 #    raise Exception('Not Implemented')
 def verify_decode_jwt(token):
-    jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/well-known/jwks.json')
+    jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
 
     unverified_header = jwt.get_unverified_header(token)
