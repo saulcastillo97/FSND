@@ -31,22 +31,35 @@ CORS(app)
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
 #    try:
-    selection = Drink.query.all()
-    drinks = [drink.short() for drink in selection]
+#GOOD!
+    #selection = Drink.query.all()
+    #drinks = [drink.short() for drink in selection]
+
 
     try:
-        if len(drinks) == 0:
-            abort(404)
-
-        return jsonify({
-            'success': True,
-            'drinks': drinks
+        return json.dumps({
+            'success':
+            True,
+            'drinks': [drink.short() for drink in Drink.query.all()]
         }), 200
+    except:
+        return json.dumps({
+            'success': False,
+            'error': "An error occurred"
+        }), 500
 
-    except Exception as e:
-        print("Exception is >>", e)
-        print(sys.exc_info())
-        abort (404)
+    #try:
+    #    if len(drinks) == 0:
+    #        abort(404)
+
+    #    return jsonify({
+    #        'success': True,
+    #        'drinks': drinks
+    #    }), 200
+
+    #except Exception as e:
+    #    print(sys.exc_info())
+    #    abort (404)
 
 '''
 @TODO implement endpoint
@@ -59,22 +72,42 @@ def get_drinks():
 
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
-def get_drinks_detail(token):
-    selection = Drink.query.all()
-    drinks = [drink.long() for drink in selection]
+def get_drinks_detail(jwt):
 
-    try:
-        if len(drinks) == 0:
-            abort(404)
+    jwt = get_token_auth_header()
+    print(jwt)
 
-        return jsonify({
-            'success': True,
-            'drinks': drinks
-        }), 200
+    drinks = Drink.query.all()
+    print(drinks)
 
-    except Exception as e:
-        print(sys.exc_info())
-        abort (404)
+    return jsonify({
+        'success': True,
+        'drinks': drinks
+    })
+    #selection = Drink.query.all()
+    #drinks = [drink.long() for drink in selection]
+    #try:
+    #    selection = Drink.query.order_by(Drink.id).all()
+
+    #    return jsonify({
+    #        'success': True,
+    #        'drinks': [drink.long() for drink in selection]
+    #    }), 200
+
+    #except:
+        #abort(401)
+    #try:
+    #    if len(drinks) == 0:
+    #        abort(404)
+
+    #    return jsonify({
+    #        'success': True,
+    #        'drinks': drinks
+    #    }), 200
+
+    #except Exception as e:
+    #    print(sys.exc_info())
+    #    abort (404)
 
 '''
 @TODO implement endpoint
@@ -129,9 +162,26 @@ def post_drinks(token):
 @app.route('/drinks/<int:id>',methods=['PATCH'])
 @requires_auth('patch:drinks')
 def update_drink(token, id):
-    #try:
-        #data = request.get_json()
-        #drink  = Drink.query.filter(Drink.id==id).one_or_none()
+    data = request.get_json()
+    drink  = Drink.query.filter(Drink.id == id).one_or_none()
+
+    if drink is None:
+        abort(404)
+
+    try:
+        drink.title = data.get('title')
+        drink.recipe = data.get('recipe')
+        drink.update()
+
+        return jsonify({
+            'success': True,
+            'drinks': [drink.long()],
+            'update': id
+        }), 200
+
+    except Exception as e:
+        print(sys.exc_info())
+        abort(422)
 
 '''
 @TODO implement endpoint
@@ -144,23 +194,38 @@ def update_drink(token, id):
         or appropriate status code indicating reason for failure
 '''
 
-@app.route('/drinks/<id>', methods=['DELETE'])
+@app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
 def delete_drink(token, id):
     try:
         drink = Drink.query.filter(Drink.id == id).one_or_none()
 
-        if not drink:
+        if drink is None:
             abort(404)
-        else:
-            drink.delete()
 
-        return jsonify({
+        drink.delete()
+
+        return jsnoify({
             'success': True,
-            'deleted_drink': Drink.id
+            'delete': id
         }), 200
     except:
-        abort(404)
+        abort(401)
+
+    #try:
+    #    drink = Drink.query.filter(Drink.id == id).one_or_none()
+
+    #    if not drink:
+    #        abort(404)
+    #    else:
+    #        drink.delete()
+
+    #    return jsonify({
+    #        'success': True,
+    #        'deleted_drink': id
+    #    }), 200
+    #except:
+    #    abort(404)
 
 ## Error Handling
 '''
@@ -222,12 +287,20 @@ def not_found(error):
         "message": "resource not found"
     }), 404
 
-#return app
 
 '''
 @TODO implement error handler for AuthError
     error handler should conform to general task above
 '''
+
+@app.errorhandler(AuthError)
+def handle_auth_error(ex):
+    """
+    Receive the raised authorization error and propagates it as response
+    """
+    response = jsonify(ex.error)
+    response.status_code = ex.status_code
+    return response
 
 #@app.errorhandler(AuthError)
 #def auth_error(error):
