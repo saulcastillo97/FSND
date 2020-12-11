@@ -30,12 +30,7 @@ CORS(app)
 
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
-#    try:
 #GOOD!
-    #selection = Drink.query.all()
-    #drinks = [drink.short() for drink in selection]
-
-
     try:
         return json.dumps({
             'success':
@@ -48,19 +43,6 @@ def get_drinks():
             'error': "An error occurred"
         }), 500
 
-    #try:
-    #    if len(drinks) == 0:
-    #        abort(404)
-
-    #    return jsonify({
-    #        'success': True,
-    #        'drinks': drinks
-    #    }), 200
-
-    #except Exception as e:
-    #    print(sys.exc_info())
-    #    abort (404)
-
 '''
 @TODO implement endpoint
     GET /drinks-detail
@@ -72,42 +54,21 @@ def get_drinks():
 
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
-def get_drinks_detail(jwt):
+def get_drinks_details(token):
+    selection = Drink.query.all()
+    drinks = [drink.long() for drink in selection]
+    try:
+        if len(drinks) == 0:
+            abort(404)
 
-    jwt = get_token_auth_header()
-    print(jwt)
+        return jsonify({
+            'success': True,
+            'drinks': drinks
+        }), 200
 
-    drinks = Drink.query.all()
-    print(drinks)
-
-    return jsonify({
-        'success': True,
-        'drinks': drinks
-    })
-    #selection = Drink.query.all()
-    #drinks = [drink.long() for drink in selection]
-    #try:
-    #    selection = Drink.query.order_by(Drink.id).all()
-
-    #    return jsonify({
-    #        'success': True,
-    #        'drinks': [drink.long() for drink in selection]
-    #    }), 200
-
-    #except:
-        #abort(401)
-    #try:
-    #    if len(drinks) == 0:
-    #        abort(404)
-
-    #    return jsonify({
-    #        'success': True,
-    #        'drinks': drinks
-    #    }), 200
-
-    #except Exception as e:
-    #    print(sys.exc_info())
-    #    abort (404)
+    except Exception as e:
+        print(sys.exc_info())
+        abort (404)
 
 '''
 @TODO implement endpoint
@@ -212,21 +173,6 @@ def delete_drink(token, id):
     except:
         abort(401)
 
-    #try:
-    #    drink = Drink.query.filter(Drink.id == id).one_or_none()
-
-    #    if not drink:
-    #        abort(404)
-    #    else:
-    #        drink.delete()
-
-    #    return jsonify({
-    #        'success': True,
-    #        'deleted_drink': id
-    #    }), 200
-    #except:
-    #    abort(404)
-
 ## Error Handling
 '''
 Example error handling for unprocessable entity
@@ -287,6 +233,22 @@ def not_found(error):
         "message": "resource not found"
     }), 404
 
+@app.errorhandler(422)
+def unprocessable(error):
+    return jsonify({
+        "success": False,
+        "error": 422,
+        "message": "unprocessable"
+    }), 422
+
+@app.errorhandler(500)
+def server_error(error):
+    return jsonify({
+        "success":False,
+        "error": 500,
+        "message": "something went wrong"
+    }), 500
+
 
 '''
 @TODO implement error handler for AuthError
@@ -301,11 +263,3 @@ def handle_auth_error(ex):
     response = jsonify(ex.error)
     response.status_code = ex.status_code
     return response
-
-#@app.errorhandler(AuthError)
-#def auth_error(error):
-    #return jsonify ({
-        #'success':
-        #'error':
-        #'message':
-      #})
