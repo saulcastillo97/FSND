@@ -34,13 +34,13 @@ class AuthError(Exception):
 #   raise Exception('Not Implemented')
 def get_token_auth_header():
     auth_header = request.headers.get('Authorization', None)
+
     if not auth_header:
         raise AuthError({
             'code': 'authorization_header_missing',
             'description': 'Authorization header is missing'
         }, 401)
 
-    header_parts = auth_header.split()
 
     #if not len(header_parts) == 2:
     #    raise AuthError({
@@ -53,6 +53,7 @@ def get_token_auth_header():
     #        'code': 'invalid_header',
     #        'description': 'Authorization header must start with "Bearer"'
     #    }, 401)
+    header_parts = auth_header.split()
 
     if header_parts[0].lower() != "bearer":
         raise AuthError({
@@ -100,7 +101,7 @@ def check_permissions(permission, payload):
             'description':'Permission not located'
         }, 403)
 
-    return True
+    #return True
 
 '''
 @TODO implement verify_decode_jwt(token) method
@@ -129,14 +130,14 @@ def verify_decode_jwt(token):
             'code':'invalid_header',
             'description':'Authorization malformed'
         }, 401)
-    for key in jwk['keys']:
+    for key in jwks['keys']:
         if key['kid'] == unverified_header['kid']:
             rsa_key = {
                 'kty': key['kty'],
                 'kid': key['kid'],
                 'use': key['use'],
                 'n': key['n'],
-                'e': key['e'],
+                'e': key['e']
             }
     if rsa_key:
         try:
