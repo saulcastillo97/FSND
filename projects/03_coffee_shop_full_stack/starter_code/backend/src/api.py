@@ -58,7 +58,8 @@ def get_drinks_details(token):
     selection = Drink.query.all()
     drinks = [drink.long() for drink in selection]
     try:
-        if len(drinks) == 0:
+        if len(selection) == 0:
+            print('No drinks here')
             abort(404)
 
         return jsonify({
