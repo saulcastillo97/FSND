@@ -3,6 +3,8 @@ from flask import request, _request_ctx_stack
 from functools import wraps
 from jose import jwt
 from urllib.request import urlopen
+import traceback
+from flask import abort
 
 
 AUTH0_DOMAIN = 'scfsnd.us.auth0.com'#'udacity-fsnd.auth0.com'
@@ -30,9 +32,29 @@ class AuthError(Exception):
         it should raise an AuthError if the header is malformed
     return the token part of the header
 '''
-#def get_token_auth_header():
-#   raise Exception('Not Implemented')
 def get_token_auth_header():
+    ##try:
+    ##    if 'Authorization' not in request.headers:
+    ##        abort(401)
+    ##    auth_header = request.headers['Authorization']
+    ##    header_parts = auth_header.split(' ')
+    ##    if len(header_parts) != 2:
+    ##        abort(401)
+    ##    elif header_parts[0].lower() != 'bearer':
+    ##        abort(401)
+    ##    return header_parts[1]
+    ##except Exception as e:
+    ##    traceback.print_exc()
+    ##    print(e)
+    ###if 'Authorization' not in request.headers:
+    ###    abort(401)
+    ###auth_header = request.headers['Authorization']
+    ###header_parts = auth_header.split(' ')
+    ###if len(header_parts) != 2:
+    ###    abort(401)
+    ###elif header_parts[0].lower() != 'bearer':
+    ###    abort(401)
+    ###return header_parts[1]
     auth_header = request.headers.get('Authorization', None)
 
     if not auth_header:
@@ -41,18 +63,6 @@ def get_token_auth_header():
             'description': 'Authorization header is missing'
         }, 401)
 
-
-    #if not len(header_parts) == 2:
-    #    raise AuthError({
-    #        'code': 'invalid_header',
-    #        'description': 'Authorization header must start with "Bearer"'
-    #    }, 401)
-#
-    #if header_parts[0].lower() != 'bearer':
-    #    raise AuthError({
-    #        'code': 'invalid_header',
-    #        'description': 'Authorization header must start with "Bearer"'
-    #    }, 401)
     header_parts = auth_header.split()
 
     if header_parts[0].lower() != "bearer":
@@ -87,8 +97,6 @@ def get_token_auth_header():
     it should raise an AuthError if the requested permission string is not in the payload permissions array
     return true otherwise
 '''
-#def check_permissions(permission, payload):
-#    raise Exception('Not Implemented')
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
         raise AuthError({
@@ -99,9 +107,8 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code':'unauthorized',
             'description':'Permission not located'
-        }, 403)
-
-    #return True
+        }, 401)
+    return True
 
 '''
 @TODO implement verify_decode_jwt(token) method
@@ -116,8 +123,6 @@ def check_permissions(permission, payload):
 
     !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
 '''
-#def verify_decode_jwt(token):
-#    raise Exception('Not Implemented')
 def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
     jwks = json.loads(jsonurl.read())
@@ -184,7 +189,13 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
-            payload = verify_decode_jwt(token)
+            try:
+                payload = verify_decode_jwt(token)
+            except:
+                raise AuthError({
+                    "code": "invalid_token",
+                    "description": "invalid token"
+                }, 401)
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
 
