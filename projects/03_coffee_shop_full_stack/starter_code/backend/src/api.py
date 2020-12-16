@@ -4,6 +4,7 @@ from sqlalchemy import exc
 import json
 from flask_cors import CORS
 import traceback
+from flask import abort
 
 from .database.models import db_drop_and_create_all, setup_db, Drink
 from .auth.auth import AuthError, requires_auth
@@ -93,26 +94,27 @@ def post_drinks(token):
         new_title = data.get('title', None)
         new_recipe  = data.get('recipe', None)
 
-        try:
-            new_drink = Drink(
-                title = new_title,
-                recipe = json.dumps(new_recipe)
-            )
-            new_drink.insert()
+        #try:
+        new_drink = Drink(
+            title = new_title,
+            recipe = json.dumps(new_recipe)
+        )
+        new_drink.insert()
 
-            print("Drink Name: " + drink.title)
-            selection = Drink.query.all()
-            drinks = []
-            if len(drinks) == 0:
-                abort(404)
+        print("Drink Name: " + new_drink.title)
+        selection = Drink.query.all()
+        drinks = []
+        if len(drinks) == 0:
+            abort(404)
 
-            return jsonify({
-                'success':'True',
-                'drinks':['drink.long()']
-            }), 200
+        return jsonify({
+            'success':'True',
+            'drinks':['drink.long()']
+        }), 200
 
-        except:
-            abort(401)
+        #except:
+            #print("abort 401")
+            #abort(401)
 
     except Exception as e:
         traceback.print_exc()
@@ -217,7 +219,7 @@ def delete_drink(payload, id):#token, id):
     try:
         drink.delete()
 
-        return jsnoify({
+        return jsonify({#return jsnoify({
             'success': True,
             'delete': id
         }), 200
