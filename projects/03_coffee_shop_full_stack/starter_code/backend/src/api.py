@@ -55,13 +55,13 @@ def get_drinks():
 
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
-def get_drinks_details(payload):#token):
+def get_drinks_details(payload):
     selection = Drink.query.all()
     drinks = [drink.long() for drink in selection]
     try:
-        #if len(selection) == 0:
-        #    print('No drinks here')
-        #    abort(404)
+        #if len(selection) == 0:##
+        #    print('No drinks here')##
+        #    abort(404)##
 
         return jsonify({
             'success': True,
@@ -94,7 +94,6 @@ def post_drinks(token):
         new_title = data.get('title', None)
         new_recipe  = data.get('recipe', None)
 
-        #try:
         new_drink = Drink(
             title = new_title,
             recipe = json.dumps(new_recipe)
@@ -104,46 +103,18 @@ def post_drinks(token):
         print("Drink Name: " + new_drink.title)
         selection = Drink.query.all()
         drinks = []
-        if len(drinks) == 0:
-            abort(404)
+        #if len(drinks) == 0:##
+        #    abort(404)##
 
         return jsonify({
             'success':'True',
             'drinks':['drink.long()']
         }), 200
 
-        #except:
-            #print("abort 401")
-            #abort(401)
-
     except Exception as e:
         traceback.print_exc()
         print(e)
         abort(401)
-    #data = request.get_json()
-    #new_title = data.get('title', None)
-    #new_recipe  = data.get('recipe', None)
-
-    #try:
-    #    new_drink = Drink(
-    #        title = new_title,
-    #        recipe = json.dumps(new_recipe)
-    #    )
-    #    new_drink.insert()
-
-    #    print("Drink Name: " + drink.title)
-    #    selection = Drink.query.all()
-    #    drinks = []
-    #    if len(drinks) == 0:
-    #        abort(404)
-
-    #    return jsonify({
-    #        'success':'True',
-    #        'drinks':['drink.long()']
-    #    }), 200
-
-    #except:
-    #    abort(401)
 
 '''
 @TODO implement endpoint
