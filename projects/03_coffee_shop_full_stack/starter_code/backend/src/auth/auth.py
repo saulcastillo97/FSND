@@ -33,28 +33,6 @@ class AuthError(Exception):
     return the token part of the header
 '''
 def get_token_auth_header():
-    ##try:
-    ##    if 'Authorization' not in request.headers:
-    ##        abort(401)
-    ##    auth_header = request.headers['Authorization']
-    ##    header_parts = auth_header.split(' ')
-    ##    if len(header_parts) != 2:
-    ##        abort(401)
-    ##    elif header_parts[0].lower() != 'bearer':
-    ##        abort(401)
-    ##    return header_parts[1]
-    ##except Exception as e:
-    ##    traceback.print_exc()
-    ##    print(e)
-    ###if 'Authorization' not in request.headers:
-    ###    abort(401)
-    ###auth_header = request.headers['Authorization']
-    ###header_parts = auth_header.split(' ')
-    ###if len(header_parts) != 2:
-    ###    abort(401)
-    ###elif header_parts[0].lower() != 'bearer':
-    ###    abort(401)
-    ###return header_parts[1]
     auth_header = request.headers.get('Authorization', None)
 
     if not auth_header:
