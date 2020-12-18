@@ -59,9 +59,9 @@ def get_drinks_details(payload):
     selection = Drink.query.all()
     drinks = [drink.long() for drink in selection]
     try:
-        #if len(selection) == 0:##
-        #    print('No drinks here')##
-        #    abort(404)##
+        #if len(selection) == 0:
+        #    print('No drinks here')
+        #    abort(404)
 
         return jsonify({
             'success': True,
@@ -103,8 +103,8 @@ def post_drinks(token):
         print("Drink Name: " + new_drink.title)
         selection = Drink.query.all()
         drinks = []
-        #if len(drinks) == 0:##
-        #    abort(404)##
+        #if len(drinks) == 0:
+        #    abort(404)
 
         return jsonify({
             'success':'True',
@@ -147,26 +147,6 @@ def update_drink(payload, id):#token, id):
         'success': True,
         'drinks': [drink.long()]
     })
-    #data = request.get_json()
-    #drink  = Drink.query.filter(Drink.id == id).one_or_none()
-
-    #if drink is None:
-        #abort(404)
-
-    #try:
-    #    drink.title = data['title']#data.get('title')
-    #    drink.recipe = json.dumps(data['recipe'])#data.get()'recipe')
-    #    drink.update()
-
-    #    return jsonify({
-    #        'success': True,
-    #        'drinks': ['drink.long()'],
-    #        'update': id
-    #    }), 200
-
-    #except Exception as e:
-    #    #print(sys.exc_info())
-    #    abort(422)
 
 '''
 @TODO implement endpoint
