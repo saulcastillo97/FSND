@@ -17,9 +17,6 @@ casting_assistant_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDly
 casting_director_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3N2UyZGQ5NTgwMDY5ODk5MDBhIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxMzUwMTk4NywiZXhwIjoxNjEzNTA5MTg3LCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImdldDphY3RvcnMiLCJnZXQ6bW92aWVzIiwicGF0Y2g6YWN0b3JzIiwicGF0Y2g6bW92aWVzIiwicG9zdDphY3RvcnMiXX0.VWegbnQLuHckEcG7W5aBz1JKa0YLIYyR7MWgcshMtWs5eTzJsb1dy2my67AI06zM_5WlaHxYXBnlEW11HpEgEq6a0gxU4AJ65zwfCT2kAwWs3O-05UFiDEd-UsyJVkUwWIk64nIficzOBZKWiX9Dv41gFk-qOhDQLEfwY-eF9vK4sNC1H6r39SDgBbHYN34T1P6Jxn5U6hmYkZvodBcrcU58c96YSewCguHA3lg7oQIcmUn0au3A5mJ6xhE1OCv_ZSC6OG-aOt1Jq5DI7_YSslvM2qAscwNUsWP5J49i-feQ0oNQr8b0NL2oYRxyd-xEIfYAJ8p4T5klwNpSreFTeQ')
 executive_producer_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3ZjU2MzUwNGMwMDcxZGU5OTVmIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxMzUwMjA5NSwiZXhwIjoxNjEzNTA5Mjk1LCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImRlbGV0ZTptb3ZpZXMiLCJnZXQ6YWN0b3JzIiwiZ2V0Om1vdmllcyIsInBhdGNoOmFjdG9ycyIsInBhdGNoOm1vdmllcyIsInBvc3Q6YWN0b3JzIiwicG9zdDptb3ZpZXMiXX0.EhsfvAef7k6StSx7UfE1h4hClev0p0XLTgfwiRraXcwnS4ECMOEN5n9x-rlFTwbdZJYHaNMwsT5gCOoUEhvRaLT83jb8_B2qYCj7T2Fz3ePf6icGgQhJ25lHXDBUXDRz98YE_JKcC88aUJC9h-CWYWusJGpiWaW_M9NOm9d-rIHxgZiOIYMkCrmu0oYe7qc0SJiSshnWac6DU4NJoGt07hzBIFVKIktvk2hJ6W9oswxCnG5JfDqw_x0sJSmYW2W5nntLiRCQ1VMMcswImZlwiNwM0_0C36-ExG7GUNC1N3uVOaPem8S5Jt5xOZ2p8JRsbN7nx7B5b6BYe3UJa1AwUg')
 
-casting_assistant_header = {'Authorization': 'Bearer ' + self.casting_assistant_token}
-casting_director_header = {'Authorization': 'Bearer ' + self.casting_director_token}
-executive_producer_header = {'Authorization': 'Bearer ' + self.executive_producer_token }
 
 class CapstoneTestCase(unittest.TestCase):
     def setUp(self):
@@ -29,6 +26,10 @@ class CapstoneTestCase(unittest.TestCase):
         self.database_name = 'capstonedb'
         self.database_path = 'postgres://{}/{}'.format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
+
+        casting_assistant_header = {'Authorization': 'Bearer ' + self.casting_assistant_token}
+        casting_director_header = {'Authorization': 'Bearer ' + self.casting_director_token}
+        executive_producer_header = {'Authorization': 'Bearer ' + self.executive_producer_token }
 
         self.new_actor = {
             'name': 'Brad Pitt',
