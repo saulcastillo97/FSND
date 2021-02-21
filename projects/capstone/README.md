@@ -9,6 +9,7 @@ I completed this project as the final project and capstone of Udacity's Nanodegr
 ## Testing
 To run unittests for this application run:
 
-'''python
+::: python
 python test_app.py
-'''
+
+:::
