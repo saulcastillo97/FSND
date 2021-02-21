@@ -31,7 +31,7 @@ Errors are returned as JSON objects in the following format:
   'message': 400
 }
 ```
-The API will return four error types when requests fail:
+The API will return six error types when requests fail:
 <ol>
   <li>400: bad request</li>
   <li>401: not found</li>
