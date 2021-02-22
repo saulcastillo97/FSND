@@ -30,9 +30,13 @@ class CapstoneTestCase(unittest.TestCase):
         self.executive_producer_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3ZjU2MzUwNGMwMDcxZGU5OTVmIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxMzUwMjA5NSwiZXhwIjoxNjEzNTA5Mjk1LCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImRlbGV0ZTptb3ZpZXMiLCJnZXQ6YWN0b3JzIiwiZ2V0Om1vdmllcyIsInBhdGNoOmFjdG9ycyIsInBhdGNoOm1vdmllcyIsInBvc3Q6YWN0b3JzIiwicG9zdDptb3ZpZXMiXX0.EhsfvAef7k6StSx7UfE1h4hClev0p0XLTgfwiRraXcwnS4ECMOEN5n9x-rlFTwbdZJYHaNMwsT5gCOoUEhvRaLT83jb8_B2qYCj7T2Fz3ePf6icGgQhJ25lHXDBUXDRz98YE_JKcC88aUJC9h-CWYWusJGpiWaW_M9NOm9d-rIHxgZiOIYMkCrmu0oYe7qc0SJiSshnWac6DU4NJoGt07hzBIFVKIktvk2hJ6W9oswxCnG5JfDqw_x0sJSmYW2W5nntLiRCQ1VMMcswImZlwiNwM0_0C36-ExG7GUNC1N3uVOaPem8S5Jt5xOZ2p8JRsbN7nx7B5b6BYe3UJa1AwUg')
         setup_db(self.app, self.database_path)
 
-        self.casting_assistant_header = {'Authorization': 'Bearer ' + self.casting_assistant_token}
-        self.casting_director_header = {'Authorization': 'Bearer ' + self.casting_director_token}
-        self.executive_producer_header = {'Authorization': 'Bearer ' + self.executive_producer_token }
+        self.casting_assistant_header = [('Content-Type', 'application/json'), ('Authorization', f'Bearer {self.casting_assistant_token}')]
+        self.casting_director_header = [('Content-Type', 'application/json'), ('Authorization', f'Bearer {self.casting_director_token}')]
+        self.executive_producer_header = [('Content-Type', 'application/json'), ('Authorization', f'Bearer {self.executive_producer_token}')]
+
+        #self.casting_assistant_header = {'Authorization': 'Bearer ' + self.casting_assistant_token}
+        #self.casting_director_header = {'Authorization': 'Bearer ' + self.casting_director_token}
+        #self.executive_producer_header = {'Authorization': 'Bearer ' + self.executive_producer_token }
 
         self.new_actor = {
             'name': 'Brad Pitt',
@@ -81,7 +85,9 @@ class CapstoneTestCase(unittest.TestCase):
 
     def test_get_movies_failure(self):
         res = self.client().get('/movies1-100')
-        self.assertEqual(res.status_code, 200)
+        data = json.loads(res.data)
+        
+        self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
 
 ##---------------------------------------------------------------
@@ -166,6 +172,7 @@ class CapstoneTestCase(unittest.TestCase):
 
     def test_patch_actors_failure(self):
         res = self.client().patch('/actors/1', headers=self.casting_assistant_header)
+        data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data['success'], False)
@@ -178,7 +185,8 @@ class CapstoneTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
 
     def test_patch_movies_failure(self):
-        res = self.client().patch('/movies/1a', headers=self.casting_assistant_header)
+        res = self.client().patch('/movies/1', headers=self.casting_assistant_header)
+        data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 401)
         self.assertEqual(data['success'], False)
