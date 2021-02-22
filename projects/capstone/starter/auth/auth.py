@@ -23,6 +23,7 @@ class AuthError(Exception):
 
 
 ## Auth Header
+## might need to add tokens here
 
 '''
 @TODO implement get_token_auth_header() method

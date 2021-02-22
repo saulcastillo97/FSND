@@ -17,7 +17,7 @@ from auth.auth import AuthError, requires_auth
 def create_app(test_config=None):
     app = Flask(__name__)
     setup_db(app)
-    #migrate = Migrate(app, db)
+    migrate = Migrate(app, db)
     CORS(app)
 
 
@@ -171,6 +171,7 @@ def create_app(test_config=None):
             abort(404)
 
         data = request.get_json()
+
         if 'name' in data:
             actor.name = json.dumps(data['title'])
         if 'age' in data:
