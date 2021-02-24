@@ -2,21 +2,71 @@ import os
 import unittest
 import json
 
+from mock import patch
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask
 from models import setup_db, db,Actor, Movie
 from app import create_app
 from auth.auth import AuthError, requires_auth, verify_decode_jwt
 
-#load_dotenv()
 
 database_name = 'capstonedb'
 database_path = 'postgres://{}/{}'.format('localhost:5432', database_name)
 
-casting_assistant_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ2MDhjMjkxYTQwMDZhNzMzZjdkIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDAyNTA5MSwiZXhwIjoxNjE0MDMyMjkxLCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZ2V0OmFjdG9ycyIsImdldDptb3ZpZXMiXX0.MDlJMT8pEepG8IVMcL6Y3EkOF7UN_6CxnfMQJdRm2MJtZDHfFsvheCPF7wz7ekj0UhQKyYs990CkKVRzaD2AYERTclUANHTNNtTLNQysYa-7eArWZh5ysIFq5ABtkMYZ5C3imoCx7C3vZBYZP9w5_XiOVr8BrrEo3mLiTa9Sn0aswUbriaOZdiwTih3EF2q8P5ZQkajUKS-nib46ZLD8oRIjFrttdWMTWqvftms6VkB6XW4hgye3jdKSQL6p8gKtUxqYvUOkFxWwkBfJeYs4NO9RMU62zN_NFSHAZkhK_8nxJ207F2nzC4UshKxax78C4j2bSveDljeeH1waKd2bww')
-casting_director_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3N2UyZGQ5NTgwMDY5ODk5MDBhIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDAyNTMwMywiZXhwIjoxNjE0MDMyNTAzLCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImdldDphY3RvcnMiLCJnZXQ6bW92aWVzIiwicGF0Y2g6YWN0b3JzIiwicGF0Y2g6bW92aWVzIiwicG9zdDphY3RvcnMiXX0.Z69cyJ6QuZDI_f33CBhqnWtvq3XpnIBT4odoRCLpJh-luUUZ0nThfmrzvW1_1DmXh5CPg08V0u_E1qG1IxqxaXVe5I7o0uSR_sqKCSAKC9fr5nXaEgk__wMQACIQQXzmqr7mgzvkRg0x8DtyBAlmPfKdt-pQjz52ik02DtbKGyQP8h4kVinQjpYNb-qfRum5XfExz2JbAMipbxV-ExZd7p1Hv51VzY67P0q4qSMJQex_CGOl9udiQAV3B2h3e__2Vf3AoG8vgpzaf3rbyImX80MYIXddUhPGTW8g1y_nI-AzAiQN2eJmqO8xU1hahlKSRs5vfz0GCVLNUZUowv-kuQ')
-executive_producer_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3ZjU2MzUwNGMwMDcxZGU5OTVmIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDAyNTIzMSwiZXhwIjoxNjE0MDMyNDMxLCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImRlbGV0ZTptb3ZpZXMiLCJnZXQ6YWN0b3JzIiwiZ2V0Om1vdmllcyIsInBhdGNoOmFjdG9ycyIsInBhdGNoOm1vdmllcyIsInBvc3Q6YWN0b3JzIiwicG9zdDptb3ZpZXMiXX0.Tkkeh0rmXrSx08oAOAX57JSLuwoqG6hGy7WpycLXBSW8FOiTZuQfNjuqtNbDhAPG0h2EAQJ-2tuTgzIK3CjDTrXlr5TIVemFjbwk66-81BFRSZYtYCYGfuejLUdtAA4NAvY7AWU1YM7rVI3PP9wvPwnd0rsJwFBQ1a6sFefXrBCw8D2UK99mybxSw-0uQmrJyOs6IQF1fyovp6zJAxrHWTWzp0CP-hMyPyOJFXRuti2NiIneJ_aKFpF1Yhb5RNUEUN7eGNw-owNlr-ompx5ZV4Q5MLOmTyCBjisR4RGQfygi1kOzxeCZWGh8EwceZ3U9V-TKAGEjR0YQWu9Yu7LM8w')
+casting_assistant_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ2MDhjMjkxYTQwMDZhNzMzZjdkIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDE5OTU5OCwiZXhwIjoxNjE0MjA2Nzk4LCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZ2V0OmFjdG9ycyIsImdldDptb3ZpZXMiXX0.eNvJ9w0VLiPyOEfdrdUpOdHwMhDdM0DEgAiwevZ34r_g6yVSwt4gcdkh67LYHzitALNFvzZmHejl_dMr8wsOVSTgbxxa84TugnvQ7kZkARkxI3U_Y9AzmNjy_xowpXZ5lQ9K2EA9NkIpxvPS_p16zsXdcbx-JNgavAchQYRtb09GVJRC7XzcH9_Qu07oMlAb2Px0jeNXTAb1y3piSQ3Epz275q3obhTLLTOHObWWSthw5-hjkCX5cWJfYLd41R4t8GLRoLk_mP0hdknvmIVSpiAjPriCFwtei3p_hsK4EAi6KyFak4oVXTTS1CEed8RfX71s0ITimxS1tXAY9RFdtg')
+casting_director_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3N2UyZGQ5NTgwMDY5ODk5MDBhIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDE5OTY2OCwiZXhwIjoxNjE0MjA2ODY4LCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImdldDphY3RvcnMiLCJnZXQ6bW92aWVzIiwicGF0Y2g6YWN0b3JzIiwicGF0Y2g6bW92aWVzIiwicG9zdDphY3RvcnMiXX0.N1c8QNk9c_W2MeeW_kt3EQM7_Nh-l-I5-rPu-iJcR8URPPF7qplBUYqRlaPxkN7EdEc40J8NOa9JfvOGTzo-Eig65MgdA1AfeVmq4wSVJUTGGwAtII2rS_NHFgHvMHCtVn5lvaHdIH8bvtdDCHM5rzuPfpU5rWs9GOD1QQXMy0xiiQRsf3zzC-hVxlfsa2U--jsp9YyI_e98YYgXJCpdLwk9oxLBKFRq7xcGssBK_82apwW7jH6brInx36QQeJ-wl1UTnrzhaA_wrhSlHKflc7eD7fqb-5Jsdz3fVpXedA6gRcQtaOS90PqJrYgBBwRFc8j8OZreszBSzoSJKgRQAA')
+executive_producer_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3ZjU2MzUwNGMwMDcxZGU5OTVmIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDE5OTc0MSwiZXhwIjoxNjE0MjA2OTQxLCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImRlbGV0ZTptb3ZpZXMiLCJnZXQ6YWN0b3JzIiwiZ2V0Om1vdmllcyIsInBhdGNoOmFjdG9ycyIsInBhdGNoOm1vdmllcyIsInBvc3Q6YWN0b3JzIiwicG9zdDptb3ZpZXMiXX0.LmGaI7sCRUdxyB8e8_V1cRL9Fs5Xjz74yK6ORVMW65TJ5m2DfaEAf-LDdtmdtjgZezT-nLDVtWe8heZi7Ztg4tgc25LRdJM3byeGVHtDfl9iodSJRYnbPF7CWAwO8nGpOfyuHh14ex52Pn9OjkObIXlGpccqAQRIe3_rZTCAs-wqP22scLomcESS4y5evJiXMdyU8P6biXY65CAMH04LWJKyQQxAYjBqlBjdc_P74C3y6j_qL7yees6iwgHy94AJrKKwzGrU7s7iegu3X4FHQg7mOFZtj9SQ7iDhPuLMOpKftbLip2svN31hIK8kCY9744XnGxbBxbB8K0-YSdQj8w')
 
+ROLES = {
+    "CASTING_ASSISTANT": {
+        "permissions": [
+            "get:movies",
+            "get:actors"
+        ]
+    },
+    "CASTING_DIRECTOR": {
+        "permissions": [
+            "get:movies",
+            "get:actors",
+            "post:actors",
+            "delete:actors",
+            "patch:movies",
+            "patch:actors"
+        ]
+    },
+    "EXECUTIVE_PRODUCER": {
+        "permissions": [
+            "get:movies",
+            "get:actors",
+            "post:actors",
+            "delete:actors",
+            "patch:movies",
+            "patch:actors",
+            "post:movies",
+            "delete:movies"
+        ]
+    }
+}
+
+def mock_requires_auth(permission=''):
+    def requires_auth_decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            role_name = request.headers.get("ROLE", None)
+            if role_name is None:
+                raise AuthError({
+                    'code': 'auth_header_missing',
+                    'description': 'Authorization header is expected'
+                }, 401)
+            payload = {
+                "permissions": ROLES[role_name]["permissions"]
+            }
+            check_permissions(permission, payload)
+            return f(payload, *args, **kwargs)
+        return wrapper
+    return requires_auth_decorator
+
+patch('auth.auth.requires_auth', mock_requires_auth).start()
 
 class CapstoneTestCase(unittest.TestCase):
     def setUp(self):
@@ -25,9 +75,9 @@ class CapstoneTestCase(unittest.TestCase):
         self.client = self.app.test_client
         self.database_name = 'capstonedb'
         self.database_path = 'postgres://{}/{}'.format('localhost:5432', self.database_name)
-        self.casting_assistant_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ2MDhjMjkxYTQwMDZhNzMzZjdkIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDAyNTA5MSwiZXhwIjoxNjE0MDMyMjkxLCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZ2V0OmFjdG9ycyIsImdldDptb3ZpZXMiXX0.MDlJMT8pEepG8IVMcL6Y3EkOF7UN_6CxnfMQJdRm2MJtZDHfFsvheCPF7wz7ekj0UhQKyYs990CkKVRzaD2AYERTclUANHTNNtTLNQysYa-7eArWZh5ysIFq5ABtkMYZ5C3imoCx7C3vZBYZP9w5_XiOVr8BrrEo3mLiTa9Sn0aswUbriaOZdiwTih3EF2q8P5ZQkajUKS-nib46ZLD8oRIjFrttdWMTWqvftms6VkB6XW4hgye3jdKSQL6p8gKtUxqYvUOkFxWwkBfJeYs4NO9RMU62zN_NFSHAZkhK_8nxJ207F2nzC4UshKxax78C4j2bSveDljeeH1waKd2bww')
-        self.casting_director_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3N2UyZGQ5NTgwMDY5ODk5MDBhIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDAyNTMwMywiZXhwIjoxNjE0MDMyNTAzLCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImdldDphY3RvcnMiLCJnZXQ6bW92aWVzIiwicGF0Y2g6YWN0b3JzIiwicGF0Y2g6bW92aWVzIiwicG9zdDphY3RvcnMiXX0.Z69cyJ6QuZDI_f33CBhqnWtvq3XpnIBT4odoRCLpJh-luUUZ0nThfmrzvW1_1DmXh5CPg08V0u_E1qG1IxqxaXVe5I7o0uSR_sqKCSAKC9fr5nXaEgk__wMQACIQQXzmqr7mgzvkRg0x8DtyBAlmPfKdt-pQjz52ik02DtbKGyQP8h4kVinQjpYNb-qfRum5XfExz2JbAMipbxV-ExZd7p1Hv51VzY67P0q4qSMJQex_CGOl9udiQAV3B2h3e__2Vf3AoG8vgpzaf3rbyImX80MYIXddUhPGTW8g1y_nI-AzAiQN2eJmqO8xU1hahlKSRs5vfz0GCVLNUZUowv-kuQ')
-        self.executive_producer_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3ZjU2MzUwNGMwMDcxZGU5OTVmIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDAyNTIzMSwiZXhwIjoxNjE0MDMyNDMxLCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImRlbGV0ZTptb3ZpZXMiLCJnZXQ6YWN0b3JzIiwiZ2V0Om1vdmllcyIsInBhdGNoOmFjdG9ycyIsInBhdGNoOm1vdmllcyIsInBvc3Q6YWN0b3JzIiwicG9zdDptb3ZpZXMiXX0.Tkkeh0rmXrSx08oAOAX57JSLuwoqG6hGy7WpycLXBSW8FOiTZuQfNjuqtNbDhAPG0h2EAQJ-2tuTgzIK3CjDTrXlr5TIVemFjbwk66-81BFRSZYtYCYGfuejLUdtAA4NAvY7AWU1YM7rVI3PP9wvPwnd0rsJwFBQ1a6sFefXrBCw8D2UK99mybxSw-0uQmrJyOs6IQF1fyovp6zJAxrHWTWzp0CP-hMyPyOJFXRuti2NiIneJ_aKFpF1Yhb5RNUEUN7eGNw-owNlr-ompx5ZV4Q5MLOmTyCBjisR4RGQfygi1kOzxeCZWGh8EwceZ3U9V-TKAGEjR0YQWu9Yu7LM8w')
+        self.casting_assistant_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ2MDhjMjkxYTQwMDZhNzMzZjdkIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDE5OTU5OCwiZXhwIjoxNjE0MjA2Nzk4LCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZ2V0OmFjdG9ycyIsImdldDptb3ZpZXMiXX0.eNvJ9w0VLiPyOEfdrdUpOdHwMhDdM0DEgAiwevZ34r_g6yVSwt4gcdkh67LYHzitALNFvzZmHejl_dMr8wsOVSTgbxxa84TugnvQ7kZkARkxI3U_Y9AzmNjy_xowpXZ5lQ9K2EA9NkIpxvPS_p16zsXdcbx-JNgavAchQYRtb09GVJRC7XzcH9_Qu07oMlAb2Px0jeNXTAb1y3piSQ3Epz275q3obhTLLTOHObWWSthw5-hjkCX5cWJfYLd41R4t8GLRoLk_mP0hdknvmIVSpiAjPriCFwtei3p_hsK4EAi6KyFak4oVXTTS1CEed8RfX71s0ITimxS1tXAY9RFdtg')
+        self.casting_director_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3N2UyZGQ5NTgwMDY5ODk5MDBhIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDE5OTY2OCwiZXhwIjoxNjE0MjA2ODY4LCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImdldDphY3RvcnMiLCJnZXQ6bW92aWVzIiwicGF0Y2g6YWN0b3JzIiwicGF0Y2g6bW92aWVzIiwicG9zdDphY3RvcnMiXX0.N1c8QNk9c_W2MeeW_kt3EQM7_Nh-l-I5-rPu-iJcR8URPPF7qplBUYqRlaPxkN7EdEc40J8NOa9JfvOGTzo-Eig65MgdA1AfeVmq4wSVJUTGGwAtII2rS_NHFgHvMHCtVn5lvaHdIH8bvtdDCHM5rzuPfpU5rWs9GOD1QQXMy0xiiQRsf3zzC-hVxlfsa2U--jsp9YyI_e98YYgXJCpdLwk9oxLBKFRq7xcGssBK_82apwW7jH6brInx36QQeJ-wl1UTnrzhaA_wrhSlHKflc7eD7fqb-5Jsdz3fVpXedA6gRcQtaOS90PqJrYgBBwRFc8j8OZreszBSzoSJKgRQAA')
+        self.executive_producer_token = ('eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik9YcDlybEhPTlhJUDJkeXV6VWRaZCJ9.eyJpc3MiOiJodHRwczovL3NjZnNuZC51cy5hdXRoMC5jb20vIiwic3ViIjoiYXV0aDB8NjAyNWQ3ZjU2MzUwNGMwMDcxZGU5OTVmIiwiYXVkIjoiY2FzdGluZyIsImlhdCI6MTYxNDE5OTc0MSwiZXhwIjoxNjE0MjA2OTQxLCJhenAiOiJzU2tOQnB4RHZwWElrOEs5SDgzSXlZMzdCcXpHOGJ5ZSIsInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsiZGVsZXRlOmFjdG9ycyIsImRlbGV0ZTptb3ZpZXMiLCJnZXQ6YWN0b3JzIiwiZ2V0Om1vdmllcyIsInBhdGNoOmFjdG9ycyIsInBhdGNoOm1vdmllcyIsInBvc3Q6YWN0b3JzIiwicG9zdDptb3ZpZXMiXX0.LmGaI7sCRUdxyB8e8_V1cRL9Fs5Xjz74yK6ORVMW65TJ5m2DfaEAf-LDdtmdtjgZezT-nLDVtWe8heZi7Ztg4tgc25LRdJM3byeGVHtDfl9iodSJRYnbPF7CWAwO8nGpOfyuHh14ex52Pn9OjkObIXlGpccqAQRIe3_rZTCAs-wqP22scLomcESS4y5evJiXMdyU8P6biXY65CAMH04LWJKyQQxAYjBqlBjdc_P74C3y6j_qL7yees6iwgHy94AJrKKwzGrU7s7iegu3X4FHQg7mOFZtj9SQ7iDhPuLMOpKftbLip2svN31hIK8kCY9744XnGxbBxbB8K0-YSdQj8w')
         setup_db(self.app, self.database_path)
 
         self.casting_assistant_header = [('Content-Type', 'application/json'), ('Authorization', f'Bearer {self.casting_assistant_token}')]
@@ -62,6 +112,17 @@ class CapstoneTestCase(unittest.TestCase):
 ##---------------------------------------------------------------
 ## GET actor and movie Endpoint Tests
 ##---------------------------------------------------------------
+
+    def test_get_movies_success(self):
+        movie = Movie(title='Test', release_date='11-11-1111')
+        movie.insert()
+        res = self.client().get('/movies', headers={"ROLE": "CASTING_ASSISTANT"})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['movies'], [movie.format()])
+
     def test_get_actors_success(self):
         res = self.client().get('/actors', headers=self.casting_assistant_header)
         data = json.loads(res.data)
@@ -76,12 +137,12 @@ class CapstoneTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 404)
         self.assertEqual(data['success'], False)
 
-    def test_get_movies_success(self):
-        res = self.client().get('/movies', headers=self.casting_assistant_header)
-        data = json.loads(res.data)
+    #def test_get_movies_success(self):
+    #    res = self.client().get('/movies', headers=self.casting_assistant_header)
+    #    data = json.loads(res.data)
 
-        self.assertEqual(res.status_code, 200)
-        self.assertEqual(data['success'], True)
+    #    self.assertEqual(res.status_code, 200)
+    #    self.assertEqual(data['success'], True)
 
     def test_get_movies_failure(self):
         res = self.client().get('/movies1-100')
