@@ -5,11 +5,12 @@ from jose import jwt
 from urllib.request import urlopen
 import traceback
 from flask import abort
-
+#import pdb
+#import stacktrace
 
 AUTH0_DOMAIN = 'scfsnd.us.auth0.com'#'udacity-fsnd.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'casting'#'dev'
+API_AUDIENCE = 'casting'
 
 ## AuthError Exception
 '''
@@ -23,7 +24,6 @@ class AuthError(Exception):
 
 
 ## Auth Header
-## might need to add tokens here
 
 '''
 @TODO implement get_token_auth_header() method
@@ -50,13 +50,13 @@ def get_token_auth_header():
             'description': 'Authorization header must start with "Bearer"'
         }, 401)
 
-    elif len (header_parts) == 1:
+    elif len(header_parts) == 1:
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Token not located'
         }, 401)
 
-    elif len (header_parts) > 2:
+    elif len(header_parts) > 2:
         raise AuthError({
             'code': 'invalid_header',
             'description': 'Authorization header must be in bearer token'
@@ -64,6 +64,7 @@ def get_token_auth_header():
 
     token = header_parts[1]
     return token
+#pdb.set_trace()
 
 '''
 @TODO implement check_permissions(permission, payload) method
@@ -100,7 +101,8 @@ def check_permissions(permission, payload):
     !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
 '''
 def verify_decode_jwt(token):
-    jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
+    #jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
+    jsonurl = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
     jwks = json.loads(jsonurl.read())
 
     unverified_header = jwt.get_unverified_header(token)
@@ -140,7 +142,7 @@ def verify_decode_jwt(token):
             raise AuthError({
                 'code':'invalid_claims',
                 'description':'Incorrect claims. Check audience and issuer'
-            },401)
+            }, 401)
         except Exception:
             raise AuthError({
                 'code':'invalid_header',
