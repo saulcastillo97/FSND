@@ -5,6 +5,7 @@ from jose import jwt
 from urllib.request import urlopen
 import traceback
 from flask import abort
+import sys
 #import pdb
 #import stacktrace
 
@@ -102,7 +103,7 @@ def check_permissions(permission, payload):
 '''
 def verify_decode_jwt(token):
     #jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
-    jsonurl = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
+    jsonurl = urlopen(f"https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
     jwks = json.loads(jsonurl.read())
 
     unverified_header = jwt.get_unverified_header(token)
@@ -169,6 +170,7 @@ def requires_auth(permission=''):
             try:
                 payload = verify_decode_jwt(token)
             except:
+                print()
                 raise AuthError({
                     "code": "invalid_token",
                     "description": "invalid token"
