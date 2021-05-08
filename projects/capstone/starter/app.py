@@ -1,10 +1,11 @@
 import os
 from flask import Flask, request, abort, jsonify
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from models import setup_db, db, Movie, Actor
 from sqlalchemy import exc
+import requests ##
 
 import json
 import sys
@@ -48,7 +49,7 @@ def create_app(test_config=None):
                 'actors':[actor.format() for actor in Actor.query.all()]
             }), 200
         except Exception as e:
-            print(e)
+            print(payload)
             abort(422)
 
     @app.route('/movies', methods=['GET'])
@@ -112,6 +113,7 @@ def create_app(test_config=None):
 ##---------------------------------------------------------------
 
     @app.route('/actors', methods=['POST'])
+    #@cross_origin()
     @requires_auth('post:actors')
     def post_actor(paylaod):
         try:
@@ -127,15 +129,19 @@ def create_app(test_config=None):
             selection = Actor.query.all()
             actors = []
 
-            return_jsonify({
+            return jsonify({
                 'success': True,
                 'actor':[actor.format()]
             }), 200
         except Exception as e:
+            #url = 'http://127.0.0.1:5000/actors'
+            #x = request.get(url)
+            #print(x.json())
             print(e)
             abort(422)
 
     @app.route('/movies', methods=['POST'])
+    #@cross_origin()
     @requires_auth('post:movies')
     def post_movie(payload):
         try:
@@ -161,69 +167,100 @@ def create_app(test_config=None):
 ##---------------------------------------------------------------
 ## PATCH actor and movie Endpoint Tests
 ##---------------------------------------------------------------
-
     @app.route('/actors/<int:id>', methods=['PATCH'])
     @requires_auth('patch:actors')
     def update_actor(payload, id):
-        actor = Actor.query.get(id)
+        try:
+            actor = Actor.query.get(id)
+            data = request.get_json()
 
-        if actor is None:
-            abort(404)
+            if 'name' in data:
+                actor.name = json.dumps(data['title'])
+            if 'age' in data:
+                actor.age = json.dumps(data['age'])
+            if 'gender' in data:
+                actor.gender = json.dumps(data['gender'])
 
-        data = request.get_json()
+            actor.update()
 
-        if 'name' in data:
-            actor.name = json.dumps(data['title'])
-        if 'age' in data:
-            actor.age = json.dumps(data['age'])
-        if 'gender' in data:
-            actor.gender = json.dumps(data['gender'])
+            return jsonify({
+                'success': True,
+                'actor': [actor.format()]
+            }), 200
+        except Exception as e:
+            print(e)
+            print(data)
+            abort(422)
 
-        actor.update()
+#####    @app.route('/actors/<int:id>', methods=['PATCH'])
+#####    @requires_auth('patch:actors')
+#####    def update_actor(payload, id):
+#####        actor = Actor.query.get(id)
+#####
+#####        if actor is None:
+#####            abort(404)
+#####
+#####        data = request.get_json()
+#####
+#####        if 'name' in data:
+#####            actor.name = json.dumps(data['title'])
+#####        if 'age' in data:
+#####            actor.age = json.dumps(data['age'])
+#####        if 'gender' in data:
+#####            actor.gender = json.dumps(data['gender'])
+#####
+#####        actor.update()
+#####
+#####        return jsonify({
+#####            'success': True,
+#####            'actor': [actor.format()]
+#####        }), 200
+#####
+#####        print(data)
 
-        return jsonify({
-            'success': True,
-            'actor': [actor.format()]
-        }), 200
-    #try:
-    #    updated_actor = request.get_json()
-    #    updated_name = updated_movie.get('name')
-    #    updated_birth_date = updated_movie.get('birth_date')
-    #    updated_gender = updated_gender.get('gender')
-    #    movie = Movie.query.filer_by(id==id).first()
-    #    if actor:
-    #        if updated_name:
-    #        if updated_birth_date:
-    #        if updated_gender:
-    #        actor.update()
-    #    else:
-    #        print(id)
+    #@app.route('/movies/<int:id>', methods=['PATCH'])
+    #@requires_auth('patch:movies')
+    #def update_movie(payload, id):
+    #    movie = Movie.query.get(id)
+    #    if movie is None:
     #        abort(404)
+#
+    #    data = request.get_json()
+    #    if 'title' in data:
+    #        movie.title = json.dumps(data['title'])
+    #    if 'release_date' in data:
+    #        movie.title = json.dumps(data['release_date'])
+    #    movie.update()
     #    return jsonify({
     #        'success': True,
-    #        'actor':
-    #    })
-    #except Exception as e:
-    #    print(e)
-    #    abort(400)
-
+    #        'movie': [movie.format()]
+    #    }), 200
+#
     @app.route('/movies/<int:id>', methods=['PATCH'])
     @requires_auth('patch:movies')
     def update_movie(payload, id):
-        movie = Movie.query.get(id)
-        if movie is None:
-            abort(404)
+      error = False
+      data = {}
+      try:
+          data = request.get_json()
+          title = body['title']
+          release_date = body['release_date']
 
-        data = request.get_json()
-        if 'title' in data:
-            movie.title = json.dumps(data['title'])
-        if 'release_date' in data:
-            movie.title = json.dumps(data['release_date'])
-        movie.update()
-        return jsonify({
+          movie = Movie(title=title, release_date=release_date)
+          movie.insert()
+
+      except():
+          error = True
+      if error:
+          abort(500)
+      else:
+          moviesarray = []
+          moviesarray.append(movie.format())
+          return jsonify ({
             'success': True,
-            'movie': [movie.format()]
-        }), 200
+            'movie': moviessarray
+            })
+
 
         #try:
         #    updated_movie = request.get_json()
