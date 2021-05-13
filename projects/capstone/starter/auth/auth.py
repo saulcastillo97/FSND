@@ -38,6 +38,7 @@ def get_token_auth_header():
     auth_header = request.headers.get('Authorization', None)
 
     if not auth_header:
+        print('FAIL')
         raise AuthError({
             'code': 'authorization_header_missing',
             'description': 'Authorization header is missing'
@@ -79,11 +80,13 @@ def get_token_auth_header():
 '''
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
+        print('Fail')
         raise AuthError({
             'code': 'invalid_claims',#'invalid_header',
             'description': 'Permissions not included in JWT'
         }, 400)
     if permission not in payload ['permissions']:
+        print('FAil')
         raise AuthError({
             'code':'unauthorized',
             'description':'Permission not located'
@@ -110,6 +113,7 @@ def verify_decode_jwt(token):
     rsa_key = {}
 
     if 'kid' not in unverified_header:
+        print('FAIl')
         raise AuthError({
             'code':'invalid_header',
             'description':'Authorization malformed'
@@ -135,16 +139,19 @@ def verify_decode_jwt(token):
 
             return payload
         except jwt.ExpiredSignatureError:
+            print('FAIL')
             raise AuthError({
                 'code':'token_expired',
                 'description':'Token expired'
             }, 401)
         except jwt.JWTClaimsError:
+            print('FAIL')
             raise AuthError({
                 'code':'invalid_claims',
                 'description':'Incorrect claims. Check audience and issuer'
             }, 401)
         except Exception:
+            print('FAIL')
             raise AuthError({
                 'code':'invalid_header',
                 'description':'Unable to parse authentication token.'
@@ -167,16 +174,28 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
-            try:
-                payload = verify_decode_jwt(token)
-            except:
-                print()
-                raise AuthError({
-                    "code": "invalid_token",
-                    "description": "invalid token"
-                }, 401)
+            payload = verify_decode_jwt(token)
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
-
         return wrapper
     return requires_auth_decorator
+#def requires_auth(permission=''):
+#    def requires_auth_decorator(f):
+#        @wraps(f)
+#        def wrapper(*args, **kwargs):
+#            token = get_token_auth_header()
+#            print('FAILhere')
+#            try:
+#                payload = verify_decode_jwt(token)
+#                print('FAIL2')
+#            except:
+#                print('FAILFAIL')
+#                raise AuthError({
+#                    "code": "invalid_token",
+#                    "description": "invalid token"
+#                }, 401)
+#            check_permissions(permission, payload)
+#            return f(payload, *args, **kwargs)
+#
+#        return wrapper
+#    return requires_auth_decorator
