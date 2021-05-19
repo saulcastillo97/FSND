@@ -56,7 +56,7 @@ def create_app(test_config=None):
     @requires_auth('get:movies')
     def get_movies(payload):
         try:
-            return jsnoify ({
+            return jsonify ({
                 'success': True,
                 'movies': [movie.format() for movie in Movie.query.all()]
             }), 200
@@ -154,7 +154,7 @@ def create_app(test_config=None):
 
             return jsonify({
                 'success': True,
-                'actor':[actor.format()]
+                'actor':[new_actor.format()]
             }), 200
         except Exception as e:
             #url = 'http://127.0.0.1:5000/actors'
@@ -181,7 +181,7 @@ def create_app(test_config=None):
 
             return jsonify ({
                 'success': True,
-                'movie':[movie.format()]
+                'movie':[new_movie.format()]
             }), 200
         except Exception as e:
             print(e)

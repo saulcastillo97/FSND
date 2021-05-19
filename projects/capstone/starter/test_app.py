@@ -114,8 +114,8 @@ class CapstoneTestCase(unittest.TestCase):
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
-        #self.assertEqual(data['success'], True)
-        self.assertEqual(data['movies'], [movie.format()])
+        self.assertEqual(data['success'], True)
+        #self.assertEqual(data['movies'], [movie.format()])
 
     def test_get_actors_success(self):
         #res = self.client().get('/actors', headers=self.casting_assistant_header)
