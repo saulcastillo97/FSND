@@ -135,7 +135,7 @@ def create_app(test_config=None):
 ## POST actor and movie Endpoints
 ##---------------------------------------------------------------
 
-    @app.route('/actors', methods=['POST'])
+    @app.route('/actors', methods=['GET', 'POST'])
     #@cross_origin()
     @requires_auth('post:actors')
     def post_actor(paylaod):
@@ -153,8 +153,8 @@ def create_app(test_config=None):
             actors = []
 
             return jsonify({
-                'success': True,
-                'actor':[new_actor.format()]
+                'success': True
+                #'actor':[new_actor.format()]
             }), 200
         except Exception as e:
             #url = 'http://127.0.0.1:5000/actors'
@@ -163,7 +163,7 @@ def create_app(test_config=None):
             print(e)
             abort(422)
 
-    @app.route('/movies', methods=['POST'])
+    @app.route('/movies', methods=['GET', 'POST'])
     #@cross_origin()
     @requires_auth('post:movies')
     def post_movie(payload):
@@ -180,8 +180,8 @@ def create_app(test_config=None):
             movies = []
 
             return jsonify ({
-                'success': True,
-                'movie':[new_movie.format()]
+                'success': True
+                #'movie':[new_movie.format()]
             }), 200
         except Exception as e:
             print(e)
