@@ -36,9 +36,11 @@ class AuthError(Exception):
 '''
 def get_token_auth_header():
     auth_header = request.headers.get('Authorization', None)
+    #print(auth_header)
 
     if not auth_header:
         print('FAIL')
+        print('auth_header is:', auth_header)
         raise AuthError({
             'code': 'authorization_header_missing',
             'description': 'Authorization header is missing'
@@ -65,6 +67,7 @@ def get_token_auth_header():
         }, 401)
 
     token = header_parts[1]
+    print('token is:', token)
     return token
 #pdb.set_trace()
 
@@ -80,13 +83,14 @@ def get_token_auth_header():
 '''
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
-        print('Fail')
         raise AuthError({
             'code': 'invalid_claims',#'invalid_header',
             'description': 'Permissions not included in JWT'
         }, 400)
+
     if permission not in payload ['permissions']:
-        print('FAil')
+        print('FAil missing permissions')
+        print(payload)
         raise AuthError({
             'code':'unauthorized',
             'description':'Permission not located'
@@ -110,6 +114,7 @@ def verify_decode_jwt(token):
     jwks = json.loads(jsonurl.read())
 
     unverified_header = jwt.get_unverified_header(token)
+    print("unver_header", unverified_header)
     rsa_key = {}
 
     if 'kid' not in unverified_header:
@@ -118,6 +123,7 @@ def verify_decode_jwt(token):
             'code':'invalid_header',
             'description':'Authorization malformed'
         }, 401)
+
     for key in jwks['keys']:
         if key['kid'] == unverified_header['kid']:
             rsa_key = {
@@ -134,32 +140,32 @@ def verify_decode_jwt(token):
                 rsa_key,
                 algorithms=ALGORITHMS,
                 audience=API_AUDIENCE,
-                issuer='https://' + AUTH0_DOMAIN + '/'
+                issuer='https://'+AUTH0_DOMAIN+'/'
             )
-
+            print("payload",payload)
             return payload
+
         except jwt.ExpiredSignatureError:
-            print('FAIL')
             raise AuthError({
                 'code':'token_expired',
                 'description':'Token expired'
             }, 401)
         except jwt.JWTClaimsError:
-            print('FAIL')
             raise AuthError({
                 'code':'invalid_claims',
                 'description':'Incorrect claims. Check audience and issuer'
             }, 401)
         except Exception:
-            print('FAIL')
             raise AuthError({
                 'code':'invalid_header',
                 'description':'Unable to parse authentication token.'
-            }, 400)
+            }, 401)
+
+    print("rsa_key",rsa_key)
     raise AuthError({
         'code':'invalid_header',
         'description':'Unable to locate the appropriate key'
-    }, 400)
+    }, 401)
 '''
 @TODO implement @requires_auth(permission) decorator method
     @INPUTS
