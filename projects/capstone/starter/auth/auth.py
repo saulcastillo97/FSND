@@ -92,8 +92,7 @@ def check_permissions(permission, payload):
         print('FAil missing permissions')
         print(payload)
         print('Permission: ' + permission)
-        print('Payload['permissions']: ' + payload ['permissions'])
-        print('FAil missing permissions')
+        print("Payload['permissions']: " + payload ['permissions'])
         raise AuthError({
             'code':'unauthorized',
             'description':'Permission not located'
